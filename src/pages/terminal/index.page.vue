@@ -3,7 +3,7 @@
 import { json } from 'stream/consumers'
 import vue, { PropType } from 'vue'
 
-const ws = new WebSocket('ws://127.0.0.1:8000')
+const ws = new WebSocket('ws://192.168.31.73:8080')
 
 ws.onopen = () => {
   console.log('Подключение выполнено')
