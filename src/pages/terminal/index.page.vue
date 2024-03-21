@@ -1,143 +1,138 @@
 <!-- eslint-disable vue/multi-word-component-names -->
+<script setup lang="ts">
+import vue, { PropType } from 'vue'
+
+const terminalHistory = defineModel({
+  type: Array as PropType<{ id: number; field: string }[]>
+})
+
+const terminalField = defineModel('field', {
+  type: String,
+  default() {
+    return ''
+  }
+})
+
+terminalHistory.value = [{ id: 0, field: 'Терминал сделал студент группы 4ПКС-35 Игнатов Никита' }]
+
+function userEnter(payload: KeyboardEvent) {
+  console.log(terminalField.value)
+  console.log(Date.now())
+
+  terminalHistory.value?.push({ id: Date.now(), field: terminalField.value })
+  console.log(terminalHistory.value)
+  terminalField.value = ''
+}
+</script>
+
+<script>
+import { io } from 'socket.io'
+
+const URL = process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:3000'
+
+export const socket = io(URL)
+
+socket.on('connect', () => {
+  console.lot('Соединение установлено')
+})
+</script>
+
 <template>
-  <main id="container">
-    <div id="terminal">
-      <!-- Terminal Bar -->
-      <section id="terminal__bar">
-        <div id="bar__buttons">
-          <button class="bar__button" id="bar__button--exit">&#10005;</button>
-          <button class="bar__button">&#9472;</button>
-          <button class="bar__button">&#9723;</button>
-        </div>
-        <p id="bar__user">fobabs@ubuntu: ~</p>
-      </section>
-      <!-- Terminal Body -->
-      <section id="terminal__body">
-        <div id="terminal__prompt">
-          <span id="terminal__prompt--user">fobabs@ubuntu:</span>
-          <span id="terminal__prompt--location">~</span>
-          <span id="terminal__prompt--bling">$</span>
-          <span id="terminal__prompt--cursor"></span>
-        </div>
-      </section>
+  <div class="terminal-wrapper">
+    <div class="home-item">
+      <h1 style="font-weight: 500; font-size: 26px">SSH Терминал</h1>
+      <router-link to="/">К главной странице</router-link>
     </div>
-  </main>
+    <main id="container">
+      <div class="elements-wrapper">
+        <p
+          v-for="field in terminalHistory"
+          :cterminalHistory="terminalHistory"
+          :key="field.id"
+          class="terminal-field"
+        >
+          {{ field.field }}
+        </p>
+        <textarea
+          id="terminal-bar"
+          autofocus
+          spellcheck="false"
+          type="text"
+          @keyup.enter="userEnter"
+          v-model="terminalField"
+        />
+      </div>
+    </main>
+  </div>
 </template>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css?family=Ubuntu');
 @import url('https://fonts.googleapis.com/css?family=Ubuntu+Mono');
-body {
-  background: linear-gradient(45deg, #57003f 0%, #f57453 100%);
-  font-family: Ubuntu;
-}
-#container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-#terminal {
-  width: 70vw;
-  height: 65vh;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5);
-}
-#terminal__bar {
-  display: flex;
-  width: 100%;
-  height: 30px;
-  align-items: center;
-  padding: 0 8px;
-  box-sizing: border-box;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-  background: linear-gradient(#504b45 0%, #3c3b37 100%);
-}
-#bar__buttons {
-  display: flex;
-  align-items: center;
-}
-.bar__button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-  margin-right: 5px;
-  font-size: 8px;
-  height: 12px;
-  width: 12px;
-  box-sizing: border-box;
+
+#terminal-bar {
+  background: none;
   border: none;
-  border-radius: 100%;
-  background: linear-gradient(#7d7871 0%, #595953 100%);
-  text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2);
-  box-shadow:
-    0px 0px 1px 0px #41403a,
-    0px 1px 1px 0px #474642;
+  font-family: 'Ubuntu Mono';
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 16px;
+  height: max-content;
+  padding: 0;
+  resize: none;
 }
-.bar__button:hover {
-  cursor: pointer;
-}
-.bar__button:focus {
-  outline: none;
-}
-#bar__button--exit {
-  background: linear-gradient(#f37458 0%, #de4c12 100%);
-  background-clip: padding-box;
-}
-#bar__user {
-  color: #d5d0ce;
-  margin-left: 6px;
-  font-size: 14px;
-  line-height: 15px;
-}
-#terminal__body {
+
+.elements-wrapper {
+  display: flex;
+  flex-direction: column;
+  border: 0px;
+  width: 100%;
   background: rgba(56, 4, 40, 0.9);
   font-family: 'Ubuntu Mono';
   height: calc(100% - 30px);
   padding-top: 2px;
   margin-top: -1px;
+  padding: 8px;
 }
-#terminal__prompt {
+
+.home-item {
   display: flex;
+  width: fit-content;
+  flex-direction: column;
+  align-items: center;
 }
-#terminal__prompt--user {
-  color: #7eda28;
+
+body {
+  background: linear-gradient(45deg, #57003f 0%, #f57453 100%);
+  font-family: Ubuntu;
 }
-#terminal__prompt--location {
-  color: #4878c0;
+
+#terminal-bar:focus {
+  outline: none;
 }
-#terminal__prompt--bling {
-  color: #dddddd;
+
+#terminal-bar button {
+  border: 0px;
 }
-#terminal__prompt--cursor {
-  display: block;
-  height: 17px;
-  width: 8px;
-  margin-left: 9px;
-  animation: blink 1200ms linear infinite;
+
+.terminal-wrapper {
+  display: flex;
+  width: 1080px;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 50px;
 }
-@keyframes blink {
-  0% {
-    background: #ffffff;
-  }
-  49% {
-    background: #ffffff;
-  }
-  60% {
-    background: transparent;
-  }
-  99% {
-    background: transparent;
-  }
-  100% {
-    background: #ffffff;
-  }
-}
-@media (max-width: 600px) {
-  #terminal {
-    max-height: 90%;
-    width: 90%;
-  }
+
+#container {
+  display: flex;
+  width: 100%;
+  height: 600px;
+  flex-direction: column;
+  padding: 24px 8px 8px 8px;
+  background-color: #57003f;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  background: linear-gradient(#504b45 0%, #3c3b37 100%);
 }
 </style>
