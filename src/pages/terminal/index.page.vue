@@ -1,6 +1,23 @@
 <!-- eslint-disable vue/multi-word-component-names -->
-<script setup lang="ts">
+<script type="module" setup lang="ts">
+import { json } from 'stream/consumers'
 import vue, { PropType } from 'vue'
+
+const ws = new WebSocket('ws://127.0.0.1:8000')
+
+ws.onopen = () => {
+  console.log('Подключение выполнено')
+}
+
+ws.onmessage = (message) => {
+  const { type, value } = JSON.parse(message.data)
+  if (type == 'res') {
+    terminalField.value = '%'
+    terminalHistory.value?.push({ id: Date.now(), field: value })
+    terminalField.value = ''
+  }
+  console.log(type + value)
+}
 
 const terminalHistory = defineModel({
   type: Array as PropType<{ id: number; field: string }[]>
@@ -17,24 +34,12 @@ terminalHistory.value = [{ id: 0, field: 'Терминал сделал студ
 
 function userEnter(payload: KeyboardEvent) {
   console.log(terminalField.value)
-  console.log(Date.now())
 
   terminalHistory.value?.push({ id: Date.now(), field: terminalField.value })
-  console.log(terminalHistory.value)
+
+  ws.send(JSON.stringify({ type: 'req', value: terminalField.value }))
   terminalField.value = ''
 }
-</script>
-
-<script>
-import { io } from 'socket.io'
-
-const URL = process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:3000'
-
-export const socket = io(URL)
-
-socket.on('connect', () => {
-  console.lot('Соединение установлено')
-})
 </script>
 
 <template>
