@@ -1,23 +1,30 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script type="module" setup lang="ts">
-import { json } from 'stream/consumers'
-import vue, { PropType } from 'vue'
+import vue, { PropType, nextTick } from 'vue'
+import { io } from "socket.io-client";
 
-const ws = new WebSocket('ws://192.168.31.73:8080')
+const socket = io('ws://localhost:9001')
 
-ws.onopen = () => {
-  console.log('Подключение выполнено')
-}
 
-ws.onmessage = (message) => {
-  const { type, value } = JSON.parse(message.data)
+socket.connect()
+
+socket.on("connect", () => {
+  console.log('connect')
+  nextTick(() => {
+    terminalHistory.value?.push({ id: Date.now(), field: 'Succesfuly connected' })
+
+  })
+  terminalField.value = '@elik/'
+});
+socket.on("events", ({ type, value }) => {
   if (type == 'res') {
     terminalField.value = '%'
     terminalHistory.value?.push({ id: Date.now(), field: value })
     terminalField.value = ''
   }
   console.log(type + value)
-}
+
+})
 
 const terminalHistory = defineModel({
   type: Array as PropType<{ id: number; field: string }[]>
@@ -33,11 +40,10 @@ const terminalField = defineModel('field', {
 terminalHistory.value = [{ id: 0, field: 'Терминал сделал студент группы 4ПКС-35 Игнатов Никита' }]
 
 function userEnter(payload: KeyboardEvent) {
-  console.log(terminalField.value)
 
   terminalHistory.value?.push({ id: Date.now(), field: terminalField.value })
-
-  ws.send(JSON.stringify({ type: 'req', value: terminalField.value }))
+  const data = terminalField.value.replace(/(\r\n|\n|\r)/gm, "")
+  socket.emit( 'events', data )
   terminalField.value = ''
 }
 </script>
